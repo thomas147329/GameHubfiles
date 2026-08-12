@@ -8,5 +8,10 @@
     "name": "Number Guess",
     "description": "Guess the secret number.",
     "file": "games/number_guess.py"
+  },
+  {
+    "name": "Space Invaders",
+    "description": "Shoot the aliens!",
+    "file": "games/spaceinvaders.py"
   }
 ]
