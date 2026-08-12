@@ -18,5 +18,10 @@
     "name": "Space Invaders 2!",
     "description": "Shoot the aliens! And they shoot back!!",
     "file": "games/spaceinvaders2.py"
+  },
+  {
+    "name": "Asteroid Blaster",
+    "description": "Blast falling asteroids before they hit your ship!",
+    "file": "games/asteroid_blaster.py"
   }
 ]
