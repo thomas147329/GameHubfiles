@@ -6,12 +6,14 @@ HEIGHT = 600
 
 PLAYER_SPEED = 8
 BULLET_SPEED = 12
+ALIEN_BULLET_SPEED = 6
 ALIEN_SPEED = 2
 ALIEN_DROP = 25
 
 BG = "#050510"
 PLAYER_COLOR = "#00ff66"
 BULLET_COLOR = "#ffffff"
+ALIEN_BULLET_COLOR = "#ff66ff"
 ALIEN_COLORS = ["#ff4444", "#ffcc00", "#44ccff"]
 
 
@@ -46,10 +48,12 @@ class SpaceInvaders(tk.Tk):
 
         self.bullet = None
 
+        # Alien bullets
+        self.alien_bullets = []
+
         self.aliens = []
 
         self.alien_direction = 1
-        self.alien_move_timer = 0
 
         self.bind("<KeyPress>", self.key_down)
         self.bind("<KeyRelease>", self.key_up)
@@ -59,6 +63,7 @@ class SpaceInvaders(tk.Tk):
         self.create_player()
         self.create_aliens()
 
+        self.update_score()
         self.update_game()
 
 
@@ -83,11 +88,9 @@ class SpaceInvaders(tk.Tk):
     def move_player(self):
 
         if "Left" in self.keys:
-
             self.player_x -= PLAYER_SPEED
 
         if "Right" in self.keys:
-
             self.player_x += PLAYER_SPEED
 
         self.player_x = max(
@@ -125,7 +128,9 @@ class SpaceInvaders(tk.Tk):
                 x = start_x + column * 60
                 y = start_y + row * 50
 
-                color = ALIEN_COLORS[row % len(ALIEN_COLORS)]
+                color = ALIEN_COLORS[
+                    row % len(ALIEN_COLORS)
+                ]
 
                 alien = self.canvas.create_oval(
                     x - 18,
@@ -156,18 +161,18 @@ class SpaceInvaders(tk.Tk):
 
             alien["x"] += move_x
 
-            if alien["x"] <= 30 or alien["x"] >= WIDTH - 30:
+            if (
+                alien["x"] <= 30
+                or alien["x"] >= WIDTH - 30
+            ):
                 hit_edge = True
-
 
         if hit_edge:
 
             self.alien_direction *= -1
 
             for alien in self.aliens:
-
                 alien["y"] += ALIEN_DROP
-
 
         for alien in self.aliens:
 
@@ -181,7 +186,7 @@ class SpaceInvaders(tk.Tk):
 
 
     # -------------------------
-    # SHOOTING
+    # PLAYER SHOOTING
     # -------------------------
 
     def shoot(self):
@@ -213,15 +218,19 @@ class SpaceInvaders(tk.Tk):
             -BULLET_SPEED
         )
 
-        coords = self.canvas.coords(self.bullet)
+        coords = self.canvas.coords(
+            self.bullet
+        )
 
         if not coords:
-
             return
 
         if coords[3] < 0:
 
-            self.canvas.delete(self.bullet)
+            self.canvas.delete(
+                self.bullet
+            )
+
             self.bullet = None
 
             return
@@ -234,14 +243,18 @@ class SpaceInvaders(tk.Tk):
         if self.bullet is None:
             return
 
-        bullet_box = self.canvas.bbox(self.bullet)
+        bullet_box = self.canvas.bbox(
+            self.bullet
+        )
 
         if bullet_box is None:
             return
 
         for alien in self.aliens[:]:
 
-            alien_box = self.canvas.bbox(alien["id"])
+            alien_box = self.canvas.bbox(
+                alien["id"]
+            )
 
             if alien_box is None:
                 continue
@@ -255,7 +268,9 @@ class SpaceInvaders(tk.Tk):
                     alien["id"]
                 )
 
-                self.aliens.remove(alien)
+                self.aliens.remove(
+                    alien
+                )
 
                 self.canvas.delete(
                     self.bullet
@@ -268,10 +283,125 @@ class SpaceInvaders(tk.Tk):
                 self.update_score()
 
                 if not self.aliens:
-
                     self.win_game()
 
                 return
+
+
+    # -------------------------
+    # ALIEN SHOOTING
+    # -------------------------
+
+    def alien_shoot(self):
+
+        if not self.aliens:
+            return
+
+        # Random chance that an alien fires
+        if random.random() > 0.035:
+            return
+
+        # Find aliens that are relatively low
+        shooters = []
+
+        for alien in self.aliens:
+
+            # Give every alien a chance to shoot
+            shooters.append(alien)
+
+        if not shooters:
+            return
+
+        alien = random.choice(shooters)
+
+        x = alien["x"]
+        y = alien["y"] + 20
+
+        bullet = self.canvas.create_rectangle(
+            x - 3,
+            y,
+            x + 3,
+            y + 12,
+            fill=ALIEN_BULLET_COLOR,
+            outline=""
+        )
+
+        self.alien_bullets.append(
+            bullet
+        )
+
+
+    def move_alien_bullets(self):
+
+        for bullet in self.alien_bullets[:]:
+
+            self.canvas.move(
+                bullet,
+                0,
+                ALIEN_BULLET_SPEED
+            )
+
+            coords = self.canvas.coords(
+                bullet
+            )
+
+            if not coords:
+                self.alien_bullets.remove(
+                    bullet
+                )
+                continue
+
+            # Bullet reached bottom
+            if coords[1] > HEIGHT:
+
+                self.canvas.delete(
+                    bullet
+                )
+
+                self.alien_bullets.remove(
+                    bullet
+                )
+
+                continue
+
+            self.check_alien_bullet_collision(
+                bullet
+            )
+
+
+    def check_alien_bullet_collision(
+        self,
+        bullet
+    ):
+
+        bullet_box = self.canvas.bbox(
+            bullet
+        )
+
+        player_box = self.canvas.bbox(
+            self.player
+        )
+
+        if (
+            bullet_box
+            and player_box
+            and self.overlap(
+                bullet_box,
+                player_box
+            )
+        ):
+
+            self.canvas.delete(
+                bullet
+            )
+
+            if bullet in self.alien_bullets:
+
+                self.alien_bullets.remove(
+                    bullet
+                )
+
+            self.lose_life()
 
 
     # -------------------------
@@ -281,10 +411,10 @@ class SpaceInvaders(tk.Tk):
     def overlap(self, a, b):
 
         return not (
-            a[2] < b[0] or
-            a[0] > b[2] or
-            a[3] < b[1] or
-            a[1] > b[3]
+            a[2] < b[0]
+            or a[0] > b[2]
+            or a[3] < b[1]
+            or a[1] > b[3]
         )
 
 
@@ -299,7 +429,12 @@ class SpaceInvaders(tk.Tk):
 
         self.move_player()
         self.move_bullet()
+
         self.move_aliens()
+
+        # Alien shooting
+        self.alien_shoot()
+        self.move_alien_bullets()
 
         self.check_alien_attack()
 
@@ -357,6 +492,9 @@ class SpaceInvaders(tk.Tk):
 
     def lose_life(self):
 
+        if self.game_over or self.win:
+            return
+
         self.lives -= 1
 
         self.update_score()
@@ -367,7 +505,16 @@ class SpaceInvaders(tk.Tk):
 
             return
 
-        # Reset aliens slightly higher
+        # Remove existing alien bullets
+        for bullet in self.alien_bullets:
+
+            self.canvas.delete(
+                bullet
+            )
+
+        self.alien_bullets.clear()
+
+        # Move aliens back up
         for alien in self.aliens:
 
             alien["y"] -= 80
@@ -500,6 +647,7 @@ class SpaceInvaders(tk.Tk):
         self.player_x = WIDTH // 2
 
         self.bullet = None
+        self.alien_bullets = []
 
         self.aliens = []
 
@@ -509,14 +657,10 @@ class SpaceInvaders(tk.Tk):
         self.create_aliens()
 
         self.update_score()
-
         self.update_game()
 
 
 if __name__ == "__main__":
 
     game = SpaceInvaders()
-
-    game.update_score()
-
     game.mainloop()
