@@ -13,7 +13,7 @@
     "name": "Space Invaders",
     "description": "Shoot the aliens!",
     "file": "games/spaceinvaders.py"
-  }
+  },
   {
     "name": "Space Invaders 2",
     "description": "Shoot the aliens! And they shoot back!!",
