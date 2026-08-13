@@ -25,13 +25,13 @@
     "file": "games/asteroid_blaster.py"
   },
   {
-    "name": "Tank Wars",
-    "description": "Shoot other tanks",
-    "file": "games/tankwars.py"
-  },
-  {
     "name": "Turret Wars",
     "description": "Shoot the other balls to get the highest score!",
     "file": "games/gungame.py"
+  },
+  {
+    "name": "Tank Wars",
+    "description": "Shoot other tanks",
+    "file": "games/tankwars.py"
   }
 ]
