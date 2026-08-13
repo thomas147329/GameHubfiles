@@ -25,8 +25,8 @@
     "file": "games/asteroid_blaster.py"
   },
   {
-    "name": "Gun Game",
-    "description": "Blast falling asteroids before they hit your ship!",
+    "name": "Turret Wars",
+    "description": "Shoot the other balls to get the highest score!",
     "file": "games/gungame.py"
   }
 ]
