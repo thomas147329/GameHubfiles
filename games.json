@@ -28,10 +28,5 @@
     "name": "Turret Wars",
     "description": "Shoot the other balls to get the highest score!",
     "file": "games/gungame.py"
-  }'
-  {
-    "name": "Snake",
-    "description": "Eat the apples!",
-    "file": "games/snake.py"
   }
 ]
