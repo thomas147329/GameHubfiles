@@ -49,7 +49,9 @@ class Tank:
             self.y += self.speed
 
     def update_angle(self, mouse_pos):
-        rel_x, rel_y = mouse_pos - self.x, mouse_pos - self.y
+        # FIXED: Extract individual coordinates from tuple before subtracting
+        rel_x = mouse_pos[0] - self.x
+        rel_y = mouse_pos[1] - self.y
         self.angle = math.atan2(rel_y, rel_x)
 
     def draw(self, surface):
@@ -78,7 +80,8 @@ class EnemyTank:
         if self.x - self.size // 2 <= 0 or self.x + self.size // 2 >= WIDTH:
             self.speed *= -1
         
-        rel_x, rel_y = player_x - self.x, player_y - self.y
+        rel_x = player_x - self.x
+        rel_y = player_y - self.y
         self.angle = math.atan2(rel_y, rel_x)
 
     def shoot(self, enemy_bullets):
@@ -140,7 +143,6 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN and not game_over:
-            # Check for Left Click (button index 1)
             if event.button == 1:
                 player_bullets.append(Bullet(player_tank.x, player_tank.y, player_tank.angle, BULLET_COLOR))
 
@@ -211,5 +213,3 @@ while running:
 
 pygame.quit()
 sys.exit()
-
-
