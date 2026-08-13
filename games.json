@@ -24,4 +24,9 @@
     "description": "Blast falling asteroids before they hit your ship!",
     "file": "games/asteroid_blaster.py"
   }
+  {
+    "name": "Gun Game",
+    "description": "Blast falling asteroids before they hit your ship!",
+    "file": "games/gungame.py"
+  }
 ]
