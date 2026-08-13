@@ -38,18 +38,17 @@ class Tank:
         self.angle = 0  
 
     def move(self, keys):
-        # WASD Key Configuration
         if keys[pygame.K_a] and self.x - self.size // 2 > 0:
             self.x -= self.speed
         if keys[pygame.K_d] and self.x + self.size // 2 < WIDTH:
             self.x += self.speed
-        if keys[pygame.K_w] and self.y - self.size // 2 > HEIGHT // 2: # Restricted to bottom half
+        if keys[pygame.K_w] and self.y - self.size // 2 > HEIGHT // 2: 
             self.y -= self.speed
         if keys[pygame.K_s] and self.y + self.size // 2 < HEIGHT:
             self.y += self.speed
 
     def update_angle(self, mouse_pos):
-        # FIXED: Extract individual coordinates from tuple before subtracting
+        # Fix applied here: using [0] and [1] to extract variables from the tuple
         rel_x = mouse_pos[0] - self.x
         rel_y = mouse_pos[1] - self.y
         self.angle = math.atan2(rel_y, rel_x)
@@ -147,7 +146,6 @@ while running:
                 player_bullets.append(Bullet(player_tank.x, player_tank.y, player_tank.angle, BULLET_COLOR))
 
     if not game_over:
-        # Inputs & Engine Updates
         keys = pygame.key.get_pressed()
         mouse_pos = pygame.mouse.get_pos()
 
@@ -213,3 +211,4 @@ while running:
 
 pygame.quit()
 sys.exit()
+
