@@ -9,7 +9,7 @@ pygame.init()
 # Window Setup
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Tank Game with AI Enemy")
+pygame.display.set_caption("Tank Game - WASD & Mouse Click")
 clock = pygame.time.Clock()
 
 # Colors
@@ -38,17 +38,18 @@ class Tank:
         self.angle = 0  
 
     def move(self, keys):
-        if keys[pygame.K_LEFT] and self.x - self.size // 2 > 0:
+        # WASD Key Configuration
+        if keys[pygame.K_a] and self.x - self.size // 2 > 0:
             self.x -= self.speed
-        if keys[pygame.K_RIGHT] and self.x + self.size // 2 < WIDTH:
+        if keys[pygame.K_d] and self.x + self.size // 2 < WIDTH:
             self.x += self.speed
-        if keys[pygame.K_UP] and self.y - self.size // 2 > HEIGHT // 2: # Keep player on bottom half
+        if keys[pygame.K_w] and self.y - self.size // 2 > HEIGHT // 2: # Restricted to bottom half
             self.y -= self.speed
-        if keys[pygame.K_DOWN] and self.y + self.size // 2 < HEIGHT:
+        if keys[pygame.K_s] and self.y + self.size // 2 < HEIGHT:
             self.y += self.speed
 
     def update_angle(self, mouse_pos):
-        rel_x, rel_y = mouse_pos[0] - self.x, mouse_pos[1] - self.y
+        rel_x, rel_y = mouse_pos - self.x, mouse_pos - self.y
         self.angle = math.atan2(rel_y, rel_x)
 
     def draw(self, surface):
@@ -70,15 +71,13 @@ class EnemyTank:
         self.speed = 2
         self.angle = 0
         self.shoot_cooldown = 0
-        self.shoot_delay = 90 # Frames between shots (~1.5 seconds)
+        self.shoot_delay = 90 
 
     def move_and_aim(self, player_x, player_y):
-        # AI Logic: Paces back and forth horizontally at the top
         self.x += self.speed
         if self.x - self.size // 2 <= 0 or self.x + self.size // 2 >= WIDTH:
             self.speed *= -1
         
-        # Track player position with turret
         rel_x, rel_y = player_x - self.x, player_y - self.y
         self.angle = math.atan2(rel_y, rel_x)
 
@@ -140,8 +139,9 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.KEYDOWN and not game_over:
-            if event.key == pygame.K_SPACE:
+        elif event.type == pygame.MOUSEBUTTONDOWN and not game_over:
+            # Check for Left Click (button index 1)
+            if event.button == 1:
                 player_bullets.append(Bullet(player_tank.x, player_tank.y, player_tank.angle, BULLET_COLOR))
 
     if not game_over:
@@ -166,7 +166,7 @@ while running:
             if b.is_offscreen():
                 enemy_bullets.remove(b)
 
-        # Player Rect Setup for collisions
+        # Collision Boxes
         p_rect = pygame.Rect(player_tank.x - player_tank.size//2, player_tank.y - player_tank.size//2, player_tank.size, player_tank.size)
         e_rect = pygame.Rect(enemy_tank.x - enemy_tank.size//2, enemy_tank.y - enemy_tank.size//2, enemy_tank.size, enemy_tank.size)
 
@@ -175,7 +175,6 @@ while running:
             if b.get_rect().colliderect(e_rect):
                 player_bullets.remove(b)
                 score += 10
-                # Relocate enemy randomly at the top when destroyed
                 enemy_tank.x = random.randint(enemy_tank.size, WIDTH - enemy_tank.size)
 
         # Check Enemy Hits Player
@@ -212,4 +211,5 @@ while running:
 
 pygame.quit()
 sys.exit()
+
 
