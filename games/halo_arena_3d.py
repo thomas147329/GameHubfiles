@@ -15,7 +15,7 @@ NUM_RAYS = 240
 MAX_DEPTH = 900
 PLAYER_SPEED = 3.2
 TURN_SPEED = 0.045
-ENEMY_COUNT = 7
+ENEMY_COUNT = input("# of aliens")
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
