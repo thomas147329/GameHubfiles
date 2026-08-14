@@ -33,5 +33,10 @@
     "name": "Tank Wars",
     "description": "Shoot other tanks",
     "file": "games/tankwars.py"
+  },
+  {
+    "name": "Halo Arena 3D",
+    "description": "Fight enemies in a first-person 3D arena!",
+    "file": "games/halo_arena_3d.py"
   }
 ]
