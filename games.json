@@ -40,8 +40,8 @@
     "file": "games/halo_arena_3d.py"
   },
   {
-    "name": "Minecraft Builder",
+    "name": "Minecraft",
     "description": "Build and explore your own block world!",
-    "file": "games/minecraft_builder.py"
+    "file": "games/Main.py"
   }
 ]
