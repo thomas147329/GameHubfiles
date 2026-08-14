@@ -14,8 +14,8 @@ FOV = math.radians(70)
 NUM_RAYS = 240
 MAX_DEPTH = 900
 PLAYER_SPEED = 3.2
-TURN_SPEED = 0.045
-ENEMY_COUNT = input("# of aliens")
+MOUSE_SENSITIVITY = 0.0035
+ENEMY_COUNT = 7
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -24,7 +24,6 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont("Helvetica", 22, bold=True)
 big_font = pygame.font.SysFont("Helvetica", 56, bold=True)
 
-# Simple arena map. # = wall, . = floor
 MAP = [
     "################",
     "#..............#",
@@ -51,10 +50,6 @@ for row, line in enumerate(MAP):
 enemies = []
 spawn_points = [(5.5, 1.5), (10.5, 1.5), (13.5, 3.5), (5.5, 3.5),
                 (10.5, 5.5), (2.5, 7.0), (13.5, 7.0), (7.5, 7.0)]
-for i in range(ENEMY_COUNT):
-    sx, sy = spawn_points[i]
-    enemies.append({"x": sx * TILE, "y": sy * TILE, "health": 100,
-                    "cooldown": random.uniform(0.5, 2.0), "flash": 0})
 
 bullets = []
 player_shot_cooldown = 0
@@ -62,6 +57,23 @@ score = 0
 wave = 1
 game_over = False
 win = False
+mouse_locked = False
+
+
+def spawn_enemies(count):
+    enemies.clear()
+    for i in range(count):
+        sx, sy = random.choice(spawn_points)
+        enemies.append({
+            "x": sx * TILE,
+            "y": sy * TILE,
+            "health": 100,
+            "cooldown": random.uniform(0.7, 2.0),
+            "flash": 0
+        })
+
+
+spawn_enemies(ENEMY_COUNT)
 
 
 def reset_game():
@@ -73,11 +85,7 @@ def reset_game():
     game_over = False
     win = False
     player_shot_cooldown = 0
-    enemies.clear()
-    for i in range(ENEMY_COUNT):
-        sx, sy = spawn_points[i]
-        enemies.append({"x": sx * TILE, "y": sy * TILE, "health": 100,
-                        "cooldown": random.uniform(0.5, 2.0), "flash": 0})
+    spawn_enemies(ENEMY_COUNT)
 
 
 def blocked(x, y, radius=16):
@@ -108,20 +116,28 @@ def shoot_player():
     global player_shot_cooldown
     if player_shot_cooldown > 0 or game_over or win:
         return
-    player_shot_cooldown = 0.22
+    player_shot_cooldown = 0.18
     bullets.append({
-        "x": player["x"], "y": player["y"],
-        "angle": player["angle"], "speed": 14,
-        "owner": "player", "life": 70
+        "x": player["x"] + math.cos(player["angle"]) * 28,
+        "y": player["y"] + math.sin(player["angle"]) * 28,
+        "angle": player["angle"],
+        "speed": 18,
+        "owner": "player",
+        "life": 75,
+        "color": (255, 235, 90)
     })
 
 
 def enemy_shoot(enemy):
     angle = math.atan2(player["y"] - enemy["y"], player["x"] - enemy["x"])
     bullets.append({
-        "x": enemy["x"], "y": enemy["y"],
-        "angle": angle, "speed": 7,
-        "owner": "enemy", "life": 100
+        "x": enemy["x"],
+        "y": enemy["y"],
+        "angle": angle,
+        "speed": 7,
+        "owner": "enemy",
+        "life": 110,
+        "color": (255, 70, 70)
     })
 
 
@@ -151,8 +167,6 @@ def update(dt):
         move_x -= right_x
         move_y -= right_y
     if keys[pygame.K_d]:
-        move_x -= 0
-        move_y -= 0
         move_x += right_x
         move_y += right_y
 
@@ -160,18 +174,13 @@ def update(dt):
     if length:
         move_player(move_x / length * PLAYER_SPEED, move_y / length * PLAYER_SPEED)
 
-    if keys[pygame.K_LEFT]:
-        player["angle"] -= TURN_SPEED
-    if keys[pygame.K_RIGHT]:
-        player["angle"] += TURN_SPEED
-
-    # Enemies chase the player and fire periodically.
     for enemy in enemies:
         dx = player["x"] - enemy["x"]
         dy = player["y"] - enemy["y"]
         dist = math.hypot(dx, dy)
         enemy["cooldown"] -= dt
         enemy["flash"] = max(0, enemy["flash"] - dt)
+
         if dist > 120:
             speed = 0.7 + min(0.8, wave * 0.08)
             nx = enemy["x"] + dx / max(dist, 1) * speed
@@ -180,21 +189,25 @@ def update(dt):
                 enemy["x"] = nx
             if not blocked(enemy["x"], ny, 14):
                 enemy["y"] = ny
-        if enemy["cooldown"] <= 0 and dist < 650:
+
+        # Aliens shoot red energy bolts at the player.
+        if enemy["cooldown"] <= 0 and dist < 700:
             enemy_shoot(enemy)
-            enemy["cooldown"] = random.uniform(1.0, 2.4)
+            enemy["cooldown"] = random.uniform(0.9, 2.2)
 
     for bullet in bullets[:]:
         bullet["x"] += math.cos(bullet["angle"]) * bullet["speed"]
         bullet["y"] += math.sin(bullet["angle"]) * bullet["speed"]
         bullet["life"] -= 1
+
         if bullet["life"] <= 0 or blocked(bullet["x"], bullet["y"], 3):
-            bullets.remove(bullet)
+            if bullet in bullets:
+                bullets.remove(bullet)
             continue
 
         if bullet["owner"] == "player":
             for enemy in enemies[:]:
-                if math.hypot(bullet["x"] - enemy["x"], bullet["y"] - enemy["y"]) < 22:
+                if math.hypot(bullet["x"] - enemy["x"], bullet["y"] - enemy["y"]) < 24:
                     enemy["health"] -= 50
                     enemy["flash"] = 0.12
                     if bullet in bullets:
@@ -204,21 +217,20 @@ def update(dt):
                         score += 100
                     break
         else:
-            if math.hypot(bullet["x"] - player["x"], bullet["y"] - player["y"]) < 20:
+            if math.hypot(bullet["x"] - player["x"], bullet["y"] - player["y"]) < 22:
                 player["health"] -= 12
-                bullets.remove(bullet)
+                if bullet in bullets:
+                    bullets.remove(bullet)
                 if player["health"] <= 0:
                     player["health"] = 0
                     game_over = True
 
     if not enemies:
-        wave += 1
-        for i in range(ENEMY_COUNT + wave - 1):
-            sx, sy = random.choice(spawn_points)
-            enemies.append({"x": sx * TILE, "y": sy * TILE,
-                            "health": 100, "cooldown": random.uniform(0.5, 2.0), "flash": 0})
         if wave >= 4:
             win = True
+            return
+        wave += 1
+        spawn_enemies(ENEMY_COUNT + wave - 1)
 
 
 def cast_ray(angle):
@@ -254,37 +266,69 @@ def project_sprite(x, y, size, color):
     pygame.draw.rect(screen, (20, 20, 20), (screen_x + width * .14, y_bottom - height * .82, width * .18, height * .12))
 
 
+def project_bullet(bullet):
+    dx = bullet["x"] - player["x"]
+    dy = bullet["y"] - player["y"]
+    dist = math.hypot(dx, dy)
+    angle = normalize_angle(math.atan2(dy, dx) - player["angle"])
+    if abs(angle) > FOV / 2 or dist < 5:
+        return
+
+    corrected = dist * math.cos(angle)
+    if corrected <= 0:
+        return
+
+    screen_x = WIDTH / 2 + math.tan(angle) / math.tan(FOV / 2) * WIDTH / 2
+    size = max(4, min(24, 9000 / corrected))
+    screen_y = HEIGHT / 2 + 70 * 900 / corrected
+    pygame.draw.circle(screen, bullet["color"], (int(screen_x), int(screen_y)), int(size))
+    pygame.draw.circle(screen, (255, 255, 255), (int(screen_x), int(screen_y)), max(1, int(size / 3)))
+
+
 def draw_world():
     screen.fill((18, 25, 34))
     pygame.draw.rect(screen, (25, 45, 30), (0, HEIGHT // 2, WIDTH, HEIGHT // 2))
     pygame.draw.rect(screen, (35, 48, 60), (0, 0, WIDTH, HEIGHT // 2))
 
     ray_width = WIDTH / NUM_RAYS
-    depths = []
     for ray in range(NUM_RAYS):
         angle = player["angle"] - FOV / 2 + FOV * ray / NUM_RAYS
         depth = cast_ray(angle)
         corrected = depth * math.cos(angle - player["angle"])
-        depths.append(corrected)
         wall_height = min(HEIGHT * 2, TILE * HEIGHT / max(corrected, 1))
         shade = max(25, int(210 - corrected * 0.22))
         pygame.draw.rect(screen, (shade // 2, shade, shade),
                          (ray * ray_width, HEIGHT / 2 - wall_height / 2, ray_width + 1, wall_height))
 
-    for enemy in sorted(enemies, key=lambda e: math.hypot(e["x"] - player["x"], e["y"] - player["y"]), reverse=True):
-        color = (255, 150, 50) if enemy["flash"] > 0 else (180, 45, 55)
-        project_sprite(enemy["x"], enemy["y"], 55, color)
+    # Far objects are drawn first so nearer objects appear on top.
+    objects = []
+    for enemy in enemies:
+        objects.append((math.hypot(enemy["x"] - player["x"], enemy["y"] - player["y"]), "enemy", enemy))
+    for bullet in bullets:
+        objects.append((math.hypot(bullet["x"] - player["x"], bullet["y"] - player["y"]), "bullet", bullet))
+    objects.sort(key=lambda item: item[0], reverse=True)
 
-    # Weapon / HUD
+    for _, kind, obj in objects:
+        if kind == "enemy":
+            color = (255, 150, 50) if obj["flash"] > 0 else (180, 45, 55)
+            project_sprite(obj["x"], obj["y"], 55, color)
+        else:
+            project_bullet(obj)
+
+    # Weapon
     pygame.draw.polygon(screen, (55, 65, 72), [(WIDTH//2-55, HEIGHT), (WIDTH//2-30, HEIGHT-150),
                                                 (WIDTH//2+25, HEIGHT-150), (WIDTH//2+60, HEIGHT)])
     pygame.draw.rect(screen, (20, 20, 25), (WIDTH//2-10, HEIGHT-190, 20, 100))
-    pygame.draw.line(screen, (220, 240, 220), (WIDTH//2-10, HEIGHT//2), (WIDTH//2+10, HEIGHT//2), 2)
-    pygame.draw.line(screen, (220, 240, 220), (WIDTH//2, HEIGHT//2-10), (WIDTH//2, HEIGHT//2+10), 2)
+
+    # Mouse crosshair
+    mx, my = pygame.mouse.get_pos()
+    pygame.draw.line(screen, (220, 240, 220), (mx - 10, my), (mx + 10, my), 2)
+    pygame.draw.line(screen, (220, 240, 220), (mx, my - 10), (mx, my + 10), 2)
+    pygame.draw.circle(screen, (220, 240, 220), (mx, my), 2)
 
     hud = font.render(f"HEALTH {player['health']}    SCORE {score}    WAVE {wave}", True, (235, 245, 235))
     screen.blit(hud, (20, 18))
-    controls = font.render("WASD move   ← → turn   SPACE fire   ESC quit", True, (210, 220, 210))
+    controls = font.render("WASD move   MOUSE aim/turn   LEFT CLICK fire   ESC quit", True, (210, 220, 210))
     screen.blit(controls, (20, HEIGHT - 35))
 
 
@@ -298,6 +342,9 @@ def draw_end(text, color):
     screen.blit(sub, sub.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 40)))
 
 
+pygame.event.set_grab(True)
+pygame.mouse.set_visible(False)
+
 running = True
 while running:
     dt = clock.tick(FPS) / 1000.0
@@ -307,10 +354,12 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
-            elif event.key == pygame.K_SPACE:
-                shoot_player()
             elif event.key == pygame.K_r and (game_over or win):
                 reset_game()
+        elif event.type == pygame.MOUSEMOTION and not game_over and not win:
+            player["angle"] += event.rel[0] * MOUSE_SENSITIVITY
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            shoot_player()
 
     update(dt)
     draw_world()
