@@ -38,5 +38,10 @@
     "name": "Halo Arena 3D",
     "description": "Fight enemies in a first-person 3D arena!",
     "file": "games/halo_arena_3d.py"
+  },
+  {
+    "name": "Minecraft Builder",
+    "description": "Build and explore your own block world!",
+    "file": "games/minecraft_builder.py"
   }
 ]
