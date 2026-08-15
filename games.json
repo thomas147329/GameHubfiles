@@ -42,6 +42,7 @@
   {
     "name": "Minecraft",
     "description": "Build and explore your own block world!",
-    "file": "games/Main.py"
+    "file": "games/Main.py",
+    "asset_dirs": ["games/Assets"]
   }
 ]
