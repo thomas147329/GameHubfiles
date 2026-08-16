@@ -40,6 +40,11 @@
     "file": "games/halo_arena_3d.py"
   },
   {
+    "name": "FPS Arena",
+    "description": "A first-person shooter with mouse aiming, enemies, health, ammo, and a ray-cast 3D arena.",
+    "file": "games/fps_arena.py"
+  },
+  {
     "name": "Minecraft",
     "description": "Build and explore your own block world!",
     "file": "games/Main.py",
