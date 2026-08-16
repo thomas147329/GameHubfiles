@@ -40,8 +40,8 @@
     "file": "games/halo_arena_3d.py"
   },
   {
-    "name": "FPS Arena",
-    "description": "A first-person shooter with mouse aiming, enemies, health, ammo, and a ray-cast 3D arena.",
+    "name": "Explorer 3D",
+    "description": "Explore a peaceful 3D world and discover five hidden landmarks. No guns or enemies!",
     "file": "games/fps_arena.py"
   },
   {
